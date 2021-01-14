@@ -11,6 +11,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import static com.google.common.net.InetAddresses.isInetAddress;
+
 public class UrlUtil {
     private static Logger logger = Logger.getLogger(UrlUtil.class);
 
@@ -61,8 +63,17 @@ public class UrlUtil {
 
     private String formUrl(String protocol, String hostname, int port, String path, String queryString) {
         URL url;
+
         try {
-            URI uri = new URI(protocol, null, hostname, port, path, queryString, null);
+            URI uri;
+
+            // Remove default ports from fully-formed domains
+            if(!isInetAddress(hostname) && (port == 80 || port == 443)) {
+                uri = new URI(protocol, hostname, path, queryString, null);
+            } else {
+                uri = new URI(protocol, null, hostname, port, path, queryString, null);
+            }
+
             url = uri.toURL();
         } catch (URISyntaxException e) {
             throw new AtomfeedException("Bad URI: ", e);
